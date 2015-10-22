@@ -48,8 +48,8 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new XcacheCache();
         });
 
-        $app['cache.factory'] = $app->protect(function ($options) use ($app) {
-            switch ($options['driver']) {
+        $app['cache.factory'] = $app->protect(function ($driver, $options) use ($app) {
+            switch ($driver) {
                 case 'array':
                     return $app['cache.array']();
                     break;
@@ -68,7 +68,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
         });
 
         $app['cache'] = $app->share(function (Application $app) {
-            return $app['cache.factory']($app['cache.options']);
+            return $app['cache.factory']($app['cache.options']['driver'], $app['cache.options']);
         });
     }
 

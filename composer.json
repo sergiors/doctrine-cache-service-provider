@@ -1,5 +1,5 @@
 {
-  "name": "inbep/doctrine-cache-service-provider",
+  "name": "sergiors/doctrine-cache-service-provider",
   "description": "Doctrine Cache for Silex",
   "license": "MIT",
   "authors": [
@@ -14,7 +14,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Inbep\\Silex\\": "src"
+      "Sergiors\\Silex\\": "src"
     }
   },
   "require-dev": {

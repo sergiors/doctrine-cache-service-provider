@@ -21,7 +21,21 @@ class DoctrineCacheServiceProviderTest extends WebTestCase
         ]);
 
         $this->assertInstanceOf(ApcCache::class, $app['cache']);
-
+    }
+    
+    /**
+     * @test
+     * @expectedException \RuntimeException
+     */
+    public function shouldReturnRuntimeException()
+    {
+        $app = $this->createApplication();
+        $app->register(new DoctrineCacheServiceProvider(), [
+            'cache.options' => [
+                'driver' => 'filesystem'
+            ]
+        ]);
+        $app['cache'];
     }
 
     public function createApplication()

@@ -7,6 +7,7 @@ use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\RedisCache;
 use Doctrine\Common\Cache\ApcCache;
 use Doctrine\Common\Cache\XcacheCache;
+use Doctrine\Common\Cache\FilesystemCache;
 
 /**
  * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
@@ -15,9 +16,15 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
 {
     public function register(Application $app)
     {
-        $app['cache.options'] = [
-            'driver' => 'array'
-        ];
+        $app['cache.filesystem'] = $app->protect(function ($options) {
+            if (empty($options['cache_dir']) || false === is_dir($options['cache_dir'])) {
+                throw new \RuntimeException(
+                    'You must specify "cache_dir" for Filesystem.'
+                );
+            }
+
+            return new FilesystemCache($options['cache_dir']);
+        });
 
         $app['cache.array'] = $app->protect(function () {
             return new ArrayCache();
@@ -62,6 +69,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                 case 'xcache':
                     return $app['cache.xcache']();
                     break;
+                case 'filesystem':
+                    return $app['cache.filesystem']($options);
+                    break;
             }
 
             throw new \RuntimeException();
@@ -70,6 +80,10 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
         $app['cache'] = $app->share(function (Application $app) {
             return $app['cache.factory']($app['cache.options']['driver'], $app['cache.options']);
         });
+
+        $app['cache.options'] = [
+            'driver' => 'array'
+        ];
     }
 
     public function boot(Application $app)

@@ -18,7 +18,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
     {
         $app['cache.filesystem'] = $app->protect(function ($options) {
             if (empty($options['cache_dir']) || false === is_dir($options['cache_dir'])) {
-                throw new \RuntimeException(
+                throw new \InvalidArgumentException(
                     'You must specify "cache_dir" for Filesystem.'
                 );
             }
@@ -36,7 +36,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
 
         $app['cache.redis'] = $app->protect(function ($options) {
             if (empty($options['host']) || empty($options['port'])) {
-                throw new \RuntimeException('You must specify "host" and "port" for Redis.');
+                throw new \InvalidArgumentException('You must specify "host" and "port" for Redis.');
             }
 
             $redis = new \Redis();

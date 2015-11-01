@@ -25,9 +25,9 @@ class DoctrineCacheServiceProviderTest extends WebTestCase
     
     /**
      * @test
-     * @expectedException \RuntimeException
+     * @expectedException \InvalidArgumentException
      */
-    public function shouldReturnRuntimeException()
+    public function shouldReturnInvalidArgumentException()
     {
         $app = $this->createApplication();
         $app->register(new DoctrineCacheServiceProvider(), [

@@ -38,6 +38,29 @@ class DoctrineCacheServiceProviderTest extends WebTestCase
         $app['cache'];
     }
 
+    /**
+     * @test
+     */
+    public function multipleConnections()
+    {
+        $app = $this->createApplication();
+        $app->register(new DoctrineCacheServiceProvider());
+        $app['caches.options'] = [
+            'conn1' => 'xcache',
+            'conn2' => [
+                'driver' => 'redis'
+            ],
+            'conn3' => [
+                'driver' => 'array',
+                'namespace' => 'test'
+            ]
+        ];
+
+        $cache = $app['cache'];
+        $this->assertSame($app['caches']['conn1'], $cache);
+        $this->assertEquals('test', $app['caches']['conn3']->getNamespace());
+    }
+
     public function createApplication()
     {
         $app = new Application();

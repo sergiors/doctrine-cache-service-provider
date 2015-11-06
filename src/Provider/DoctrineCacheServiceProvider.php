@@ -16,6 +16,52 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
 {
     public function register(Application $app)
     {
+        $app['caches.options.initializer'] = $app->protect(function () use ($app) {
+            static $initialized = false;
+
+            if ($initialized) {
+                return;
+            }
+
+            $initialized = true;
+
+            if (!isset($app['caches.options'])) {
+                $app['caches.options'] = [
+                    'default' => isset($app['cache.options']) ? $app['cache.options'] : []
+                ];
+            }
+
+            $tmp = $app['caches.options'];
+            foreach ($tmp as $name => &$options) {
+                if (!is_array($options)) {
+                    $options = [
+                        'driver' => $options
+                    ];
+                }
+                $options = array_replace($app['cache.default_options'], $options);
+
+                if (!isset($app['caches.default'])) {
+                    $app['caches.default'] = $name;
+                }
+            }
+            $app['caches.options'] = $tmp;
+        });
+
+        $app['caches'] = $app->share(function (Application $app) {
+            $app['caches.options.initializer']();
+
+            $container = new \Pimple();
+            foreach ($app['caches.options'] as $name => $options) {
+                $container[$name] = $container->share(function () use ($app, $options) {
+                    $cache = $app['cache.factory']($options['driver'], $options);
+                    $cache->setNamespace($options['namespace']);
+                    return $cache;
+                });
+            }
+
+            return $container;
+        });
+
         $app['cache.filesystem'] = $app->protect(function ($options) {
             if (empty($options['cache_dir']) || false === is_dir($options['cache_dir'])) {
                 throw new \InvalidArgumentException(
@@ -77,12 +123,16 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             throw new \RuntimeException();
         });
 
+        // shortcuts for the "first" cache
         $app['cache'] = $app->share(function (Application $app) {
-            return $app['cache.factory']($app['cache.options']['driver'], $app['cache.options']);
+            $caches = $app['caches'];
+
+            return $caches[$app['caches.default']];
         });
 
-        $app['cache.options'] = [
-            'driver' => 'array'
+        $app['cache.default_options'] = [
+            'driver' => 'array',
+            'namespace' => null
         ];
     }
 

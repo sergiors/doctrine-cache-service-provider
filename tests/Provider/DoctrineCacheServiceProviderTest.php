@@ -56,8 +56,7 @@ class DoctrineCacheServiceProviderTest extends WebTestCase
             ]
         ];
 
-        $cache = $app['cache'];
-        $this->assertSame($app['caches']['conn1'], $cache);
+        $this->assertSame($app['caches']['conn1'], $app['cache']);
         $this->assertEquals('test', $app['caches']['conn3']->getNamespace());
     }
 

@@ -16,7 +16,6 @@
          beStrictAboutTestsThatDoNotTestAnything="true"
          beStrictAboutTodoAnnotatedTests="true"
          checkForUnintentionallyCoveredCode="true"
-         forceCoversAnnotation="true"
          bootstrap="vendor/autoload.php">
     <testsuites>
         <testsuite name="unit">

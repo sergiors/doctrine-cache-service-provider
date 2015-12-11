@@ -8,6 +8,7 @@ use Doctrine\Common\Cache\RedisCache;
 use Doctrine\Common\Cache\ApcCache;
 use Doctrine\Common\Cache\XcacheCache;
 use Doctrine\Common\Cache\FilesystemCache;
+use Doctrine\Common\Cache\MongoDBCache;
 
 /**
  * @author Sérgio Rafael Siqueira <sergio@inbep.com.br>
@@ -80,6 +81,23 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new ApcCache();
         });
 
+        $app['cache.mongodb'] = $app->protect(function ($options) {
+            if (empty($options['server'])
+                || empty($options['name'])
+                || empty($options['collection'])
+            ) {
+                throw new \InvalidArgumentException(
+                    'You must specify "server", "name" and "collection" for MongoDB.'
+                );
+            }
+
+            $client = new \MongoClient($options['server']);
+            $db = new \MongoDB($client, $options['name']);
+            $collection = new \MongoCollection($db, $options['collection']);
+
+            return new MongoDBCache($collection);
+        });
+
         $app['cache.redis'] = $app->protect(function ($options) {
             if (empty($options['host']) || empty($options['port'])) {
                 throw new \InvalidArgumentException('You must specify "host" and "port" for Redis.');
@@ -94,6 +112,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
 
             $cache = new RedisCache();
             $cache->setRedis($redis);
+
             return $cache;
         });
 
@@ -114,6 +133,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                     break;
                 case 'xcache':
                     return $app['cache.xcache']();
+                    break;
+                case 'mongodb':
+                    return $app['cache.mongodb']($options);
                     break;
                 case 'filesystem':
                     return $app['cache.filesystem']($options);

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="DoctrineCacheerviceProvider" default="build" basedir=".">
+<project name="DoctrineCacheServiceProvider" default="build" basedir=".">
     <property name="project.bindir" value="${project.basedir}/vendor/bin" />
     <property name="project.builddir" value="${project.basedir}/build" />
 

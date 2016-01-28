@@ -1,4 +1,5 @@
 <?php
+
 namespace Sergiors\Silex\Provider;
 
 use Silex\Application;
@@ -28,7 +29,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
 
             if (!isset($app['caches.options'])) {
                 $app['caches.options'] = [
-                    'default' => isset($app['cache.options']) ? $app['cache.options'] : []
+                    'default' => isset($app['cache.options']) ? $app['cache.options'] : [],
                 ];
             }
 
@@ -36,7 +37,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             foreach ($tmp as $name => &$options) {
                 if (!is_array($options)) {
                     $options = [
-                        'driver' => $options
+                        'driver' => $options,
                     ];
                 }
                 $options = array_replace($app['cache.default_options'], $options);
@@ -56,6 +57,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                 $container[$name] = $container->share(function () use ($app, $options) {
                     $cache = $app['cache.factory']($options['driver'], $options);
                     $cache->setNamespace($options['namespace']);
+
                     return $cache;
                 });
             }
@@ -154,7 +156,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
 
         $app['cache.default_options'] = [
             'driver' => 'array',
-            'namespace' => null
+            'namespace' => null,
         ];
     }
 

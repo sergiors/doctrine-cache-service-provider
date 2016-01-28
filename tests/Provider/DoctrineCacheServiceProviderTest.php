@@ -1,10 +1,11 @@
 <?php
-namespace Sergiors\Silex\Provider;
+
+namespace Sergiors\Silex\Tests\Provider;
 
 use Silex\Application;
 use Silex\WebTestCase;
-use Silex\Provider\DoctrineServiceProvider;
 use Doctrine\Common\Cache\ApcCache;
+use Sergiors\Silex\Provider\DoctrineCacheServiceProvider;
 
 class DoctrineCacheServiceProviderTest extends WebTestCase
 {
@@ -16,13 +17,13 @@ class DoctrineCacheServiceProviderTest extends WebTestCase
         $app = $this->createApplication();
         $app->register(new DoctrineCacheServiceProvider(), [
             'cache.options' => [
-                'driver' => 'apc'
-            ]
+                'driver' => 'apc',
+            ],
         ]);
 
         $this->assertInstanceOf(ApcCache::class, $app['cache']);
     }
-    
+
     /**
      * @test
      * @expectedException \InvalidArgumentException
@@ -32,8 +33,8 @@ class DoctrineCacheServiceProviderTest extends WebTestCase
         $app = $this->createApplication();
         $app->register(new DoctrineCacheServiceProvider(), [
             'cache.options' => [
-                'driver' => 'filesystem'
-            ]
+                'driver' => 'filesystem',
+            ],
         ]);
         $app['cache'];
     }
@@ -48,12 +49,12 @@ class DoctrineCacheServiceProviderTest extends WebTestCase
         $app['caches.options'] = [
             'conn1' => 'xcache',
             'conn2' => [
-                'driver' => 'redis'
+                'driver' => 'redis',
             ],
             'conn3' => [
                 'driver' => 'array',
-                'namespace' => 'test'
-            ]
+                'namespace' => 'test',
+            ],
         ];
 
         $this->assertSame($app['caches']['conn1'], $app['cache']);
@@ -65,6 +66,7 @@ class DoctrineCacheServiceProviderTest extends WebTestCase
         $app = new Application();
         $app['debug'] = true;
         $app['exception_handler']->disable();
+
         return $app;
     }
 }

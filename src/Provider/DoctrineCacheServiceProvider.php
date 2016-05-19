@@ -2,11 +2,11 @@
 
 namespace Sergiors\Silex\Provider;
 
-use Silex\Application;
-use Silex\ServiceProviderInterface;
+use Pimple\Container;
+use Pimple\ServiceProviderInterface;
 use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\RedisCache;
-use Doctrine\Common\Cache\ApcCache;
+use Doctrine\Common\Cache\ApcuCache;
 use Doctrine\Common\Cache\XcacheCache;
 use Doctrine\Common\Cache\FilesystemCache;
 use Doctrine\Common\Cache\MongoDBCache;
@@ -16,7 +16,7 @@ use Doctrine\Common\Cache\MongoDBCache;
  */
 class DoctrineCacheServiceProvider implements ServiceProviderInterface
 {
-    public function register(Application $app)
+    public function register(Container $app)
     {
         $app['caches.options.initializer'] = $app->protect(function () use ($app) {
             static $initialized = false;
@@ -34,36 +34,37 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             }
 
             $tmp = $app['caches.options'];
-            foreach ($tmp as $name => &$options) {
+            array_walk($tmp, function (&$options, $name) use ($app) {
                 if (!is_array($options)) {
-                    $options = [
-                        'driver' => $options,
-                    ];
+                    $options = ['driver' => $options];
                 }
+
                 $options = array_replace($app['cache.default_options'], $options);
 
-                if (!isset($app['caches.default'])) {
-                    $app['caches.default'] = $name;
+                if (isset($app['caches.default'])) {
+                    return;
                 }
-            }
+
+                $app['caches.default'] = $name;
+            });
             $app['caches.options'] = $tmp;
         });
 
-        $app['caches'] = $app->share(function (Application $app) {
+        $app['caches'] = function () use ($app) {
             $app['caches.options.initializer']();
 
-            $container = new \Pimple();
+            $container = new Container();
             foreach ($app['caches.options'] as $name => $options) {
-                $container[$name] = $container->share(function () use ($app, $options) {
+                $container[$name] = function () use ($app, $options) {
                     $cache = $app['cache.factory']($options['driver'], $options);
                     $cache->setNamespace($options['namespace']);
 
                     return $cache;
-                });
+                };
             }
 
             return $container;
-        });
+        };
 
         $app['cache.filesystem'] = $app->protect(function ($options) {
             if (empty($options['cache_dir']) || false === is_dir($options['cache_dir'])) {
@@ -79,8 +80,8 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new ArrayCache();
         });
 
-        $app['cache.apc'] = $app->protect(function () {
-            return new ApcCache();
+        $app['cache.apcu'] = $app->protect(function () {
+            return new ApcuCache();
         });
 
         $app['cache.mongodb'] = $app->protect(function ($options) {
@@ -127,8 +128,8 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                 case 'array':
                     return $app['cache.array']();
                     break;
-                case 'apc':
-                    return $app['cache.apc']();
+                case 'apcu':
+                    return $app['cache.apcu']();
                     break;
                 case 'redis':
                     return $app['cache.redis']($options);
@@ -148,19 +149,15 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
         });
 
         // shortcuts for the "first" cache
-        $app['cache'] = $app->share(function (Application $app) {
+        $app['cache'] = function () use ($app) {
             $caches = $app['caches'];
 
             return $caches[$app['caches.default']];
-        });
+        };
 
         $app['cache.default_options'] = [
             'driver' => 'array',
             'namespace' => null,
         ];
-    }
-
-    public function boot(Application $app)
-    {
     }
 }

@@ -2,12 +2,11 @@
 
 namespace Sergiors\Silex\Tests\Provider;
 
-use Silex\Application;
-use Silex\WebTestCase;
-use Doctrine\Common\Cache\ApcCache;
+use Pimple\Container;
+use Doctrine\Common\Cache\ApcuCache;
 use Sergiors\Silex\Provider\DoctrineCacheServiceProvider;
 
-class DoctrineCacheServiceProviderTest extends WebTestCase
+class DoctrineCacheServiceProviderTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @test
@@ -17,11 +16,11 @@ class DoctrineCacheServiceProviderTest extends WebTestCase
         $app = $this->createApplication();
         $app->register(new DoctrineCacheServiceProvider(), [
             'cache.options' => [
-                'driver' => 'apc',
+                'driver' => 'apcu',
             ],
         ]);
 
-        $this->assertInstanceOf(ApcCache::class, $app['cache']);
+        $this->assertInstanceOf(ApcuCache::class, $app['cache']);
     }
 
     /**
@@ -63,10 +62,6 @@ class DoctrineCacheServiceProviderTest extends WebTestCase
 
     public function createApplication()
     {
-        $app = new Application();
-        $app['debug'] = true;
-        $app['exception_handler']->disable();
-
-        return $app;
+        return new Container();
     }
 }

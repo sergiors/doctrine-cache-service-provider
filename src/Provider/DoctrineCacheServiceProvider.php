@@ -29,28 +29,25 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
 
             if (!isset($app['caches.options'])) {
                 $app['caches.options'] = [
-                    'default' => isset($app['cache.options']) ? $app['cache.options'] : [],
+                    'default' => isset($app['cache.options'])
+                        ? $app['cache.options']
+                        : []
                 ];
             }
 
-            $tmp = $app['caches.options'];
-            array_walk($tmp, function (&$options, $name) use ($app) {
-                if (!is_array($options)) {
-                    $options = ['driver' => $options];
-                }
+            $app['caches.options'] = array_map(function ($options) use ($app) {
+                return array_replace($app['cache.default_options'], is_array($options)
+                    ? $options
+                    : ['driver' => $options]
+                );
+            }, $app['caches.options']);
 
-                $options = array_replace($app['cache.default_options'], $options);
-
-                if (isset($app['caches.default'])) {
-                    return;
-                }
-
-                $app['caches.default'] = $name;
-            });
-            $app['caches.options'] = $tmp;
+            if (!isset($app['caches.default'])) {
+                $app['caches.default'] = array_keys(array_slice($app['caches.options'], 0, 1))[0];
+            }
         });
 
-        $app['caches'] = function () use ($app) {
+        $app['caches'] = function (Container $app) {
             $app['caches.options.initializer']();
 
             $container = new Container();
@@ -149,7 +146,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
         });
 
         // shortcuts for the "first" cache
-        $app['cache'] = function () use ($app) {
+        $app['cache'] = function (Container $app) {
             $caches = $app['caches'];
 
             return $caches[$app['caches.default']];

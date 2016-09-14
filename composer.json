@@ -1,6 +1,6 @@
 {
     "name": "sergiors/doctrine-cache-service-provider",
-    "description": "Doctrine Cache for Silex",
+    "description": "Doctrine Cache for Pimple",
     "license": "MIT",
     "authors": [
         {

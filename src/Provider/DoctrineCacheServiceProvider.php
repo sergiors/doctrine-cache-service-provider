@@ -54,7 +54,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             foreach ($app['caches.options'] as $name => $options) {
                 $container[$name] = function () use ($app, $options) {
                     $cache = $app['cache_factory']($options['driver'], $options);
-                    $cache->setNamespace($options['namespace']);
+                    if (isset($options['namespace'])) {
+                        $cache->setNamespace($options['namespace']);
+                    }
 
                     return $cache;
                 };

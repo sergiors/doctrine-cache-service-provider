@@ -1,10 +1,10 @@
 <?php
 
-namespace Sergiors\Silex\Tests\Provider;
+namespace Sergiors\Pimple\Tests\Provider;
 
 use Pimple\Container;
 use Doctrine\Common\Cache\ApcuCache;
-use Sergiors\Silex\Provider\DoctrineCacheServiceProvider;
+use Sergiors\Pimple\Provider\DoctrineCacheServiceProvider;
 
 class DoctrineCacheServiceProviderTest extends \PHPUnit_Framework_TestCase
 {
@@ -13,7 +13,7 @@ class DoctrineCacheServiceProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function register()
     {
-        $app = $this->createApplication();
+        $app = $this->createContainer();
         $app->register(new DoctrineCacheServiceProvider(), [
             'cache.options' => [
                 'driver' => 'apcu',
@@ -29,7 +29,7 @@ class DoctrineCacheServiceProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldReturnInvalidArgumentException()
     {
-        $app = $this->createApplication();
+        $app = $this->createContainer();
         $app->register(new DoctrineCacheServiceProvider(), [
             'cache.options' => [
                 'driver' => 'filesystem',
@@ -43,7 +43,7 @@ class DoctrineCacheServiceProviderTest extends \PHPUnit_Framework_TestCase
      */
     public function multipleConnections()
     {
-        $app = $this->createApplication();
+        $app = $this->createContainer();
         $app->register(new DoctrineCacheServiceProvider());
         $app['caches.options'] = [
             'conn1' => 'xcache',
@@ -60,7 +60,7 @@ class DoctrineCacheServiceProviderTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('test', $app['caches']['conn3']->getNamespace());
     }
 
-    public function createApplication()
+    public function createContainer()
     {
         return new Container();
     }

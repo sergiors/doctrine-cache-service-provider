@@ -1,6 +1,6 @@
 <?php
 
-namespace Sergiors\Silex\Provider;
+namespace Sergiors\Pimple\Provider;
 
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
@@ -16,9 +16,14 @@ use Doctrine\Common\Cache\MongoDBCache;
  */
 class DoctrineCacheServiceProvider implements ServiceProviderInterface
 {
-    public function register(Container $app)
+    public function register(Container $container)
     {
-        $app['caches.options.initializer'] = $app->protect(function () use ($app) {
+        $container['cache.default_options'] = [
+            'driver'    => 'array',
+            'namespace' => null,
+        ];
+        
+        $container['caches.options.initializer'] = $container->protect(function () use ($container) {
             static $initialized = false;
 
             if ($initialized) {
@@ -27,33 +32,34 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
 
             $initialized = true;
 
-            if (!isset($app['caches.options'])) {
-                $app['caches.options'] = [
-                    'default' => isset($app['cache.options'])
-                        ? $app['cache.options']
-                        : []
+            if (!isset($container['caches.options'])) {
+                $container['caches.options'] = [
+                    'default' => $container['cache.options'] ?? [],
                 ];
             }
 
-            $app['caches.options'] = array_map(function ($options) use ($app) {
-                return array_replace($app['cache.default_options'], is_array($options)
+            $container['caches.options'] = array_map(function ($options) use ($container) {
+                return array_replace($container['cache.default_options'], is_array($options)
                     ? $options
                     : ['driver' => $options]
                 );
-            }, $app['caches.options']);
+            }, $container['caches.options']);
 
-            if (!isset($app['caches.default'])) {
-                $app['caches.default'] = array_keys(array_slice($app['caches.options'], 0, 1))[0];
+            if (!isset($container['caches.default'])) {
+                $container['caches.default'] = array_keys(
+                    array_slice($container['caches.options'], 0, 1)
+                )[0];
             }
         });
 
-        $app['caches'] = function (Container $app) {
-            $app['caches.options.initializer']();
+        $container['caches'] = function (Container $container) {
+            $container['caches.options.initializer']();
 
-            $container = new Container();
-            foreach ($app['caches.options'] as $name => $options) {
-                $container[$name] = function () use ($app, $options) {
-                    $cache = $app['cache_factory']($options['driver'], $options);
+            $caches = new Container();
+            foreach ($container['caches.options'] as $name => $options) {
+                $caches[$name] = function () use ($container, $options) {
+                    $cache = $container['cache_factory']($options['driver'], $options);
+
                     if (isset($options['namespace'])) {
                         $cache->setNamespace($options['namespace']);
                     }
@@ -62,10 +68,10 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
                 };
             }
 
-            return $container;
+            return $caches;
         };
 
-        $app['cache_factory.filesystem'] = $app->protect(function ($options) {
+        $container['cache_factory.filesystem'] = $container->protect(function ($options) {
             if (empty($options['cache_dir']) || false === is_dir($options['cache_dir'])) {
                 throw new \InvalidArgumentException(
                     'You must specify "cache_dir" for Filesystem.'
@@ -75,15 +81,15 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new FilesystemCache($options['cache_dir']);
         });
 
-        $app['cache_factory.array'] = $app->protect(function ($options) {
+        $container['cache_factory.array'] = $container->protect(function ($options) {
             return new ArrayCache();
         });
 
-        $app['cache_factory.apcu'] = $app->protect(function ($options) {
+        $container['cache_factory.apcu'] = $container->protect(function ($options) {
             return new ApcuCache();
         });
 
-        $app['cache_factory.mongodb'] = $app->protect(function ($options) {
+        $container['cache_factory.mongodb'] = $container->protect(function ($options) {
             if (empty($options['server'])
                 || empty($options['name'])
                 || empty($options['collection'])
@@ -100,7 +106,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return new MongoDBCache($collection);
         });
 
-        $app['cache_factory.redis'] = $app->protect(function ($options) {
+        $container['cache_factory.redis'] = $container->protect(function ($options) {
             if (empty($options['host']) || empty($options['port'])) {
                 throw new \InvalidArgumentException('You must specify "host" and "port" for Redis.');
             }
@@ -118,27 +124,22 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             return $cache;
         });
 
-        $app['cache_factory.xcache'] = $app->protect(function ($options) {
+        $container['cache_factory.xcache'] = $container->protect(function ($options) {
             return new XcacheCache();
         });
 
-        $app['cache_factory'] = $app->protect(function ($driver, $options) use ($app) {
-            if (isset($app['cache_factory.' . $driver])) {
-                return $app['cache_factory.' . $driver]($options);
+        $container['cache_factory'] = $container->protect(function ($driver, $options) use ($container) {
+            if (isset($container['cache_factory.' . $driver])) {
+                return $container['cache_factory.' . $driver]($options);
             }
             throw new \RuntimeException();
         });
 
         // shortcuts for the "first" cache
-        $app['cache'] = function (Container $app) {
-            $caches = $app['caches'];
+        $container['cache'] = function (Container $container) {
+            $caches = $container['caches'];
 
-            return $caches[$app['caches.default']];
+            return $caches[$container['caches.default']];
         };
-
-        $app['cache.default_options'] = [
-            'driver' => 'array',
-            'namespace' => null,
-        ];
     }
 }

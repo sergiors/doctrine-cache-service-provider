@@ -9,27 +9,27 @@
         }
     ],
     "require": {
-        "php": ">=5.5",
+        "php": "^7.1",
         "doctrine/cache": "~1.4",
         "pimple/pimple": "^3.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "~4.8",
+        "phpunit/phpunit": "^6.0",
         "pdepend/pdepend": "~2.0",
         "phing/phing": "~2.10",
-        "phploc/phploc": "~2.1",
+        "phploc/phploc": "^4",
         "phpmd/phpmd": "~2.2",
         "sebastian/phpcpd": "~2.0",
         "squizlabs/php_codesniffer": "~2.1"
     },
     "autoload": {
         "psr-4": {
-            "Sergiors\\Silex\\": "src"
+            "Sergiors\\Pimple\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Sergiors\\Silex\\Tests\\": "tests"
+            "Sergiors\\Pimple\\Tests\\": "tests"
         }
     }
 }

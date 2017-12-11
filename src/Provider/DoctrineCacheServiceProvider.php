@@ -8,6 +8,7 @@ use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\RedisCache;
 use Doctrine\Common\Cache\ApcuCache;
 use Doctrine\Common\Cache\XcacheCache;
+use Doctrine\Common\Cache\MemcachedCache;
 use Doctrine\Common\Cache\FilesystemCache;
 use Doctrine\Common\Cache\MongoDBCache;
 
@@ -72,7 +73,9 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
         };
 
         $container['cache_factory.filesystem'] = $container->protect(function ($options) {
-            if (empty($options['cache_dir']) || false === is_dir($options['cache_dir'])) {
+            if (empty($options['cache_dir'])
+                || false === is_dir($options['cache_dir'])
+            ) {
                 throw new \InvalidArgumentException(
                     'You must specify "cache_dir" for Filesystem.'
                 );
@@ -125,6 +128,21 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
         });
 
         $container['cache_factory.xcache'] = $container->protect(function ($options) {
+
+            if (empty($options['host']) || empty($options['port'])) {
+                throw new \InvalidArgumentException('You must specify "host" and "port" for Memcached.');
+            }
+
+            $memcached = new \Memcached();
+            $memcached->addServer($options['host'], $options['port']);
+            
+            $cache = new MemcachedCache();
+            $cache->setMemcached($memcached);
+            
+            return $cache;
+        });
+
+        $container['cache_factory.xcache'] = $container->protect(function ($options) {
             return new XcacheCache();
         });
 
@@ -132,6 +150,7 @@ class DoctrineCacheServiceProvider implements ServiceProviderInterface
             if (isset($container['cache_factory.' . $driver])) {
                 return $container['cache_factory.' . $driver]($options);
             }
+            
             throw new \RuntimeException();
         });
 

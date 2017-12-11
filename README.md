@@ -13,7 +13,7 @@ composer require sergiors/doctrine-cache-service-provider
 How to use
 ----------
 ```php
-use Sergiors\Silex\Provider\DoctrineCacheServiceProvider;
+use Sergiors\Pimple\Provider\DoctrineCacheServiceProvider;
 
 $app->register(new DoctrineCacheServiceProvider(), [
     'cache.options' => [
@@ -33,7 +33,7 @@ $app->register(new DoctrineCacheServiceProvider(), [
 
 Something like this:
 ```php
-use Sergiors\Silex\Provider\DoctrineCacheServiceProvider;
+use Sergiors\Pimple\Provider\DoctrineCacheServiceProvider;
 
 $app->register(new DoctrineCacheServiceProvider(), [
     'caches.options' = [

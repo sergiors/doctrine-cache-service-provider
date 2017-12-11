@@ -6,7 +6,7 @@ use Pimple\Container;
 use Doctrine\Common\Cache\ApcuCache;
 use Sergiors\Pimple\Provider\DoctrineCacheServiceProvider;
 
-class DoctrineCacheServiceProviderTest extends \PHPUnit_Framework_TestCase
+class DoctrineCacheServiceProviderTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @test
